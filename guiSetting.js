@@ -17,9 +17,9 @@ function myGUI(gl) {
         view_directionZ: 4.0,
 
         shininess: 10.0,
-        normal: true,
+        normal: false,
         axis: false,
-        diffuse: true,
+        diffuse: false,
         normalPower: 1.0,
     }
 
@@ -50,11 +50,11 @@ function myGUI(gl) {
 
     view.open();
 
-    gui.add(settingGUI,'Вершины');
-    gui.add(settingGUI,'Начальная координата');
+    gui.add(settingGUI,'normal');
+    gui.add(settingGUI,'axis');
 
-    gui.add(settingGUI,'Текстуры/Карта нормалей');
-    gui.add(settingGUI,'Полигоны').min(0.0).max(2.0).step(0.1);
+    gui.add(settingGUI,'diffuse');
+    gui.add(settingGUI,'normalPower').min(0.0).max(2.0).step(0.1);
 
 
     return settingGUI;

@@ -95,7 +95,7 @@
         gl.uniform1i(u_samplerNormalMap, 1);
         gl.uniform1i(u_samplerSpecularMap, 2);
 
-       loadJSON(gl, 'resource/vclifbj_LOD0.json');
+       loadJSON(gl, 'resource/pon.json');
        //loadFile(gl, 'resource/kedi.obj');
 
 
@@ -103,9 +103,9 @@
         // ------------------------ LOAD BUFFER MODEL -----------------------------------------//
         let ModelMain = loadBuffer(gl, gl.model.meshes[0]);
         //--------------------------- create TEXTURE ------------------------------------------//
-        let tex = get_texture(gl, "resource/tex2/1.jpg");
-        let tex_normal = get_texture(gl, "resource/tex2/1_Normal_LOD0.jpg");
-        let tex_spec = get_texture(gl, "resource/tex2/1_2K_Roughness.jpg");
+        let tex = get_texture(gl, "resource/tex2/2.jpg");
+        let tex_normal = get_texture(gl, "resource/tex2/22.jpg");
+        let tex_spec = get_texture(gl, "resource/tex2/23.jpg");
         // ----------------------------- Create MATRIX -----------------------------------------//
         let PROJMATRIX = glMatrix.mat4.create();
         glMatrix.mat4.identity(PROJMATRIX);

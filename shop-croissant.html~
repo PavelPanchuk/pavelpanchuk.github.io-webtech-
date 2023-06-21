@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <title>АГУ - круасан</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="apple-touch-icon" href="assets/img/apple-icon.png">
+    <link rel="shortcut icon" type="image/x-icon" href="assets/img/favicon.ico">
+
+    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/css/templatemo.css">
+    <link rel="stylesheet" href="assets/css/custom.css">
+
+    <!-- Load fonts style after rendering the layout styles -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;200;300;400;500;700;900&display=swap">
+    <link rel="stylesheet" href="assets/css/fontawesome.min.css">
+
+    <!-- Slick -->
+    <link rel="stylesheet" type="text/css" href="assets/css/slick.min.css">
+    <link rel="stylesheet" type="text/css" href="assets/css/slick-theme.css">
+
+
+
+<!--все ниже это веб джл для работы-->
+
+<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+
+<script type="text/javascript" src="gl-matrix.js"></script>
+<script type="text/javascript" src="ShaderUtil.js"></script>
+<script type="text/javascript" src="MouseController.js"></script>
+<script type="text/javascript" src="ModelUtil.js"></script>
+<script type="text/javascript" src="dat.gui.js"></script>
+<script type="text/javascript" src="guiSetting.js"></script>
+<script type="text/javascript" src="VertexNormalsHelper.js"></script>
+<script type="text/javascript" src="Axis.js"></script>
+<script type="text/javascript" src="Camera.js"></script>
+
+<script type="text/javascript">
+    async function webGLStart() {
+
+        const canvas = document.getElementById("canvasGL");
+        if (!canvas) {
+            console.log('failed');
+            return;
+        }
+        canvas.width = 900; //screen.width;
+        canvas.height = 520; //screen.height;
+
+        let gl;
+        try {
+
+            gl = canvas.getContext("webgl", { antialias: true });
+            gl.canvas = canvas;
+
+        } catch (e) {
+            alert("You are not webgl compatible :(");
+            return false;
+        }
+
+
+        const gui = myGUI();
+        console.log(gui.source_directionX);
+
+        let MouseContr = new MouseController(gl);
+
+        //  MAIN shaderProgram ---------------------------------------------------------------//
+        let shaderProgram = await createPromiseShaderProgram(gl, 'resource/vertex_shader.glsl', 'resource/fragment_shader.glsl');
+
+        let u_Pmatrix = gl.getUniformLocation(shaderProgram, 'u_Pmatrix');
+        let u_Mmatrix = gl.getUniformLocation(shaderProgram, 'u_Mmatrix');
+        let u_Vmatrix = gl.getUniformLocation(shaderProgram, 'u_Vmatrix');
+        let u_Nmatrix = gl.getUniformLocation(shaderProgram, 'u_Nmatrix');
+        let u_source_direction = gl.getUniformLocation(shaderProgram, 'u_source_direction');
+        let u_view_direction = gl.getUniformLocation(shaderProgram, 'u_view_direction');
+        let u_shininess = gl.getUniformLocation(shaderProgram, 'u_shininess');
+
+        let a_Position = gl.getAttribLocation(shaderProgram, 'a_Position');
+        let a_uv = gl.getAttribLocation(shaderProgram, 'a_uv');
+        let a_normal = gl.getAttribLocation(shaderProgram, 'a_normal');
+        let a_tangent = gl.getAttribLocation(shaderProgram, 'a_tangent');
+        let a_bitangent = gl.getAttribLocation(shaderProgram, 'a_bitangent');
+
+        let u_sampler = gl.getUniformLocation(shaderProgram, 'samplerTex');
+        let u_samplerNormalMap = gl.getUniformLocation(shaderProgram, 'samplerNormalMap');
+        let u_samplerSpecularMap = gl.getUniformLocation(shaderProgram, 'samplerSpecularMap');
+
+        let u_diffuse = gl.getUniformLocation(shaderProgram, 'u_diffuse');
+        let u_normalPower = gl.getUniformLocation(shaderProgram, 'u_normalPower');
+
+        gl.useProgram(shaderProgram);
+
+        gl.uniform1i(u_sampler, 0);
+        gl.uniform1i(u_samplerNormalMap, 1);
+        gl.uniform1i(u_samplerSpecularMap, 2);
+
+       loadJSON(gl, 'resource/vclifbj_LOD0.json');
+       //loadFile(gl, 'resource/kedi.obj');
+
+
+
+        // ------------------------ LOAD BUFFER MODEL -----------------------------------------//
+        let ModelMain = loadBuffer(gl, gl.model.meshes[0]);
+        //--------------------------- create TEXTURE ------------------------------------------//
+        let tex = get_texture(gl, "resource/tex2/1.jpg");
+        let tex_normal = get_texture(gl, "resource/tex2/1_Normal_LOD0.jpg");
+        let tex_spec = get_texture(gl, "resource/tex2/1_2K_Roughness.jpg");
+        // ----------------------------- Create MATRIX -----------------------------------------//
+        let PROJMATRIX = glMatrix.mat4.create();
+        glMatrix.mat4.identity(PROJMATRIX);
+        let fovy = 40 * Math.PI / 180;
+        glMatrix.mat4.perspective(PROJMATRIX, fovy, canvas.width / canvas.height, 1, 50);
+
+        let MODELMATRIX = glMatrix.mat4.create();
+        let VIEWMATRIX = glMatrix.mat4.create();
+        let VIEWMATRIX_CAMERA = glMatrix.mat4.create();
+        let NORMALMATRIX = glMatrix.mat4.create();
+        let NORMALMATRIX_HELPER = glMatrix.mat4.create();
+
+        let CAMERA = new Camera(gl, "");
+        let CAMERA_Controller = new CameraController(CAMERA, gui);
+        //------------------------------- NORMAL -----------------------------------------------//
+        let shaderProgram_Normal = loadNormalShaders(gl);
+        //------------------------------- AXIS -------------------------------------------------//
+        let shaderProgram_axis = loadAxisShaders(gl);
+        //------------------------------- RENDER -----------------------------------------------//
+
+        gl.enable(gl.DEPTH_TEST);
+        gl.depthFunc(gl.LEQUAL);
+        gl.clearDepth(1.0);
+
+        let Z = 0.;
+        let AMORTIZATION = 0.8;
+        let animate;
+        let x = 0.0;
+
+        animate = function (time) {
+            CAMERA_Controller.updateMatrix();
+            //-------------------------- translate  --------------------------------------------//
+            MouseContr.dX *= AMORTIZATION, MouseContr.dY *= AMORTIZATION;
+            MouseContr.theta += MouseContr.dX, MouseContr.phi += MouseContr.dY;
+            Z = Z + MouseContr.dZ; if (Z < 1.0) { Z = 1.0 };
+            //--------------------------- VIEWMATRIX -------------------------------------------//
+            //glMatrix.mat4.identity(VIEWMATRIX);
+            // glMatrix.mat4.lookAt(VIEWMATRIX, [gui.view_directionX, gui.view_directionY, gui.view_directionZ], [0.0, 1.0, 0.0], [0.0, 1.0, 0.0]);
+
+            VIEWMATRIX = CAMERA.vMatrix;
+
+            //----------------- NORMALMATRIX_HELPER --------------------------------------------//
+            glMatrix.mat4.identity(NORMALMATRIX_HELPER);
+            glMatrix.mat4.scale(NORMALMATRIX_HELPER, NORMALMATRIX_HELPER, [1.0, Z, 1.0]);
+            glMatrix.mat4.invert(NORMALMATRIX_HELPER, NORMALMATRIX_HELPER);
+            glMatrix.mat4.transpose(NORMALMATRIX_HELPER, NORMALMATRIX_HELPER);
+            //----------------- MODELMATRIX  ---------------------------------------------------//
+            glMatrix.mat4.identity(MODELMATRIX);
+            let model_translate = glMatrix.vec3.create();
+            glMatrix.vec3.set(model_translate, gui.model_X, gui.model_Y, gui.model_Z);
+
+            x = x + 0.005;
+            glMatrix.mat4.translate(MODELMATRIX, MODELMATRIX, model_translate);
+            glMatrix.mat4.rotateX(MODELMATRIX, MODELMATRIX, MouseContr.phi);
+            glMatrix.mat4.rotateY(MODELMATRIX, MODELMATRIX, MouseContr.theta);
+            //glMatrix.mat4.rotateY(MODELMATRIX, MODELMATRIX, x);
+            glMatrix.mat4.scale(MODELMATRIX, MODELMATRIX, [1.0, Z, 1.0]);
+            //----------------- NORMALMATRIX_REAL ----------------------------------------------//
+            glMatrix.mat4.invert(NORMALMATRIX, MODELMATRIX);
+            glMatrix.mat4.transpose(NORMALMATRIX, NORMALMATRIX);
+            //-------------------------------MAIN RENDER ---------------------------------------//
+            gl.viewport(0.0, 0.0, canvas.width, canvas.height);
+            gl.clearColor(0.1, 0.1, 0.1, 1.0);
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+            //----------------------------------------------------------------------------------//
+            gl.useProgram(shaderProgram);
+            gl.enableVertexAttribArray(a_Position);
+            gl.enableVertexAttribArray(a_uv);
+            gl.enableVertexAttribArray(a_normal);
+            gl.enableVertexAttribArray(a_tangent);
+            gl.enableVertexAttribArray(a_bitangent);
+
+            gl.uniformMatrix4fv(u_Pmatrix, false, PROJMATRIX);
+            gl.uniformMatrix4fv(u_Mmatrix, false, MODELMATRIX);
+            gl.uniformMatrix4fv(u_Vmatrix, false, VIEWMATRIX);
+            gl.uniformMatrix4fv(u_Nmatrix, false, NORMALMATRIX);
+
+            const diffuse = (gui.diffuse == true) ? 1.0 : 0.0;
+            gl.uniform1f(u_diffuse, diffuse);
+            gl.uniform1f(u_normalPower, gui.normalPower);
+
+            //-------------------------- Lighting ---------------------------------------------//
+            let source_direction = glMatrix.vec3.create();
+            glMatrix.vec3.set(source_direction, gui.source_directionX, gui.source_directionY, gui.source_directionZ);
+
+            gl.uniform3fv(u_source_direction, source_direction);
+            gl.uniform1f(u_shininess, gui.shininess);
+            //----------------------------------------------------------------------------------//
+
+            glMatrix.mat4.identity(VIEWMATRIX_CAMERA);
+            let view_direction = glMatrix.vec3.create();
+            glMatrix.vec3.set(view_direction, gui.view_directionX, gui.view_directionY, gui.view_directionZ);
+            glMatrix.vec3.transformMat4(view_direction, view_direction, VIEWMATRIX_CAMERA);
+            gl.uniform3fv(u_view_direction, view_direction);
+
+            if (tex.webGLtexture) {
+                gl.activeTexture(gl.TEXTURE0);
+                gl.bindTexture(gl.TEXTURE_2D, tex.webGLtexture);
+            }
+            if (tex_normal.webGLtexture) {
+                gl.activeTexture(gl.TEXTURE1);
+                gl.bindTexture(gl.TEXTURE_2D, tex_normal.webGLtexture);
+            }
+            if (tex_spec.webGLtexture) {
+                gl.activeTexture(gl.TEXTURE2);
+                gl.bindTexture(gl.TEXTURE_2D, tex_spec.webGLtexture);
+            }
+            gl.bindBuffer(gl.ARRAY_BUFFER, ModelMain.TRIANGLE_VERTEX);
+            gl.vertexAttribPointer(a_Position, 3, gl.FLOAT, false, 4 * (3), 0);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, ModelMain.TRIANGLE_NORMAL);
+            gl.vertexAttribPointer(a_normal, 3, gl.FLOAT, false, 4 * (3), 0);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, ModelMain.TRIANGLE_TANGENT);
+            gl.vertexAttribPointer(a_tangent, 3, gl.FLOAT, false, 4 * (3), 0);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, ModelMain.TRIANGLE_BITANGENT);
+            gl.vertexAttribPointer(a_bitangent, 3, gl.FLOAT, false, 4 * (3), 0);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, ModelMain.TRIANGLE_UV);
+            gl.vertexAttribPointer(a_uv, 2, gl.FLOAT, false, 4 * (2), 0);
+
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ModelMain.TRIANGLE_FACES);
+            gl.drawElements(gl.TRIANGLES, ModelMain.ModelIndiceslength, gl.UNSIGNED_SHORT, 0);
+
+            gl.flush();
+
+            gl.disableVertexAttribArray(a_Position);
+            gl.disableVertexAttribArray(a_uv);
+            gl.disableVertexAttribArray(a_normal);
+            gl.disableVertexAttribArray(a_tangent);
+            gl.disableVertexAttribArray(a_bitangent);
+
+            //------------------------- NORMAL HELPER ------------------------------------------------//
+            if (gui.normal) {
+                VertexNormalHelper(gl, shaderProgram_Normal, PROJMATRIX, VIEWMATRIX, MODELMATRIX, NORMALMATRIX_HELPER);
+            };
+            //------------------------- AXIS ---------------------------------------------------------//
+            if (gui.axis) {
+                loadAxisHelper(gl, shaderProgram_axis, PROJMATRIX, VIEWMATRIX, MODELMATRIX);
+            };
+            window.requestAnimationFrame(animate);
+        };
+        animate(0);
+    }
+</script>
+
+
+
+
+</head>
+
+<body onload="webGLStart();">
+
+    <!-- Close Top Nav -->
+
+
+    <!-- Header -->
+    <nav class="navbar navbar-expand-lg navbar-light shadow">
+        <div class="container d-flex justify-content-between align-items-center">
+
+            <a class="navbar-brand text-success logo h1 align-self-center" href="index.html">
+                АГУ
+            </a>
+
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#templatemo_main_nav" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="align-self-center collapse navbar-collapse flex-fill  d-lg-flex justify-content-lg-between" id="templatemo_main_nav">
+                <div class="flex-fill">
+                    <ul class="nav navbar-nav d-flex justify-content-between mx-lg-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="index.html">Главная</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="about.html">О нас</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="shop.html">Каталог</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="contact.html">Контакты</a>
+                        </li>
+                    </ul>
+                </div>
+ 
+                </div>
+            </div>
+
+        </div>
+    </nav>
+    <!-- Close Header -->
+
+    <!-- Modal -->
+    <div class="modal fade bg-white" id="templatemo_search" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="w-100 pt-1 mb-5 text-right">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="" method="get" class="modal-content modal-body border-0 p-0">
+                <div class="input-group mb-2">
+                    <input type="text" class="form-control" id="inputModalSearch" name="q" placeholder="Search ...">
+                    <button type="submit" class="input-group-text bg-success text-light">
+                        <i class="fa fa-fw fa-search text-white"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+
+    <!-- Open Content -->
+    <section class="bg-light">
+        <div class="container pb-5">
+            <div class="row">
+                <div class="col-lg-5 mt-5">
+                    <div class="card mb-3">
+                        <img class="card-img img-fluid" src="assets/img/product_single_10.jpg" alt="Card image cap" id="product-detail">
+                    </div>
+                    <div class="row">
+                        <!--Start Controls-->
+                        <div class="col-1 align-self-center">
+                            <a href="#multi-item-example" role="button" data-bs-slide="prev">
+                                <i class="text-dark fas fa-chevron-left"></i>
+                                <span class="sr-only">Предпросмотр</span>
+                            </a>
+                        </div>
+                        <!--End Controls-->
+                        <!--Start Carousel Wrapper-->
+                        <div id="multi-item-example" class="col-10 carousel slide carousel-multi-item" data-bs-ride="carousel">
+                            <!--Start Slides-->
+                            <div class="carousel-inner product-links-wap" role="listbox">
+
+                                <!--First slide-->
+                                <div class="carousel-item active">
+                                    <div class="row">
+                                        <div class="col-4">
+                                            <a href="#">
+                                                <img class="card-img img-fluid" src="assets/img/product_single_01.jpg" alt="Product Image 1">
+                                            </a>
+                                        </div>
+                                        <div class="col-4">
+                                            <a href="#">
+                                                <img class="card-img img-fluid" src="assets/img/product_single_02.jpg" alt="Product Image 2">
+                                            </a>
+                                        </div>
+                                        <div class="col-4">
+                                            <a href="#">
+                                                <img class="card-img img-fluid" src="assets/img/product_single_03.jpg" alt="Product Image 3">
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!--/.First slide-->
+
+                                <!--Second slide-->
+                                <div class="carousel-item">
+                                    <div class="row">
+                                        <div class="col-4">
+                                            <a href="#">
+                                                <img class="card-img img-fluid" src="assets/img/product_single_04.jpg" alt="Product Image 4">
+                                            </a>
+                                        </div>
+                                        <div class="col-4">
+                                            <a href="#">
+                                                <img class="card-img img-fluid" src="assets/img/product_single_05.jpg" alt="Product Image 5">
+                                            </a>
+                                        </div>
+                                        <div class="col-4">
+                                            <a href="#">
+                                                <img class="card-img img-fluid" src="assets/img/product_single_06.jpg" alt="Product Image 6">
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!--/.Second slide-->
+
+                                <!--Third slide-->
+                                <div class="carousel-item">
+                                    <div class="row">
+                                        <div class="col-4">
+                                            <a href="#">
+                                                <img class="card-img img-fluid" src="assets/img/product_single_07.jpg" alt="Product Image 7">
+                                            </a>
+                                        </div>
+                                        <div class="col-4">
+                                            <a href="#">
+                                                <img class="card-img img-fluid" src="assets/img/product_single_08.jpg" alt="Product Image 8">
+                                            </a>
+                                        </div>
+                                        <div class="col-4">
+                                            <a href="#">
+                                                <img class="card-img img-fluid" src="assets/img/product_single_09.jpg" alt="Product Image 9">
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!--/.Third slide-->
+                            </div>
+                            <!--End Slides-->
+                        </div>
+                        <!--End Carousel Wrapper-->
+                        <!--Start Controls-->
+                        <div class="col-1 align-self-center">
+                            <a href="#multi-item-example" role="button" data-bs-slide="next">
+                                <i class="text-dark fas fa-chevron-right"></i>
+                                <span class="sr-only">Следующая</span>
+                            </a>
+                        </div>
+                        <!--End Controls-->
+                    </div>
+                </div>
+
+
+
+                <!-- col end -->
+                <div class="col-lg-7 mt-5">
+                    <div class="card">
+                        <div class="card-body">
+                            <h1 class="h2">Круасан</h1>
+                            <p class="h3 py-2">50 руб.</p>
+                            <p class="py-2">
+                                <i class="fa fa-star text-warning"></i>
+                                <i class="fa fa-star text-warning"></i>
+                                <i class="fa fa-star text-warning"></i>
+                                <i class="fa fa-star text-warning"></i>
+                                <i class="fa fa-star text-secondary"></i>
+                            </p>
+                            <ul class="list-inline">
+                                <li class="list-inline-item">
+                                    <h6>Метки:</h6>
+                                </li>
+                                <li class="list-inline-item">
+                                    <p class="text-muted"><strong>Без глютена</strong></p>
+                                </li>
+                            </ul>
+
+                            <h6>Описание:</h6>
+                            <p>Самый вкусный круасан в вашей жизни, от одного его вида уже текут слюньки. Даже если у вас не хватает денег на него, Вы можете съесть его мысленно, теперь в 3D!</p>
+                            <ul class="list-inline">
+                                <li class="list-inline-item">
+                                    <h6>Состав :</h6>
+                                </li>
+                                <li class="list-inline-item">
+                                    <p class="text-muted"><strong>Вода, мука, сахар, Гмо, Мышь.</strong></p>
+                                </li>
+                            </ul>
+
+    
+
+                            <form action="" method="GET">
+                                <input type="hidden" name="product-title" value="Activewear">
+                                <div class="row">
+                                  
+                                    <div class="col-auto">
+                                        <ul class="list-inline pb-3">
+                                            <li class="list-inline-item text-right">
+                                                Количество
+                                                <input type="hidden" name="product-quanity" id="product-quanity" value="1">
+                                            </li>
+                                            <li class="list-inline-item"><span class="btn btn-success" id="btn-minus">-</span></li>
+                                            <li class="list-inline-item"><span class="badge bg-secondary" id="var-value">1</span></li>
+                                            <li class="list-inline-item"><span class="btn btn-success" id="btn-plus">+</span></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="row pb-3">
+                                    <div class="col d-grid">
+                                        <button type="submit" class="btn btn-success btn-lg" name="submit" value="buy">Купить</button>
+                                    </div>
+                                    <div class="col d-grid">
+                                        <button type="submit" class="btn btn-success btn-lg" name="submit" value="addtocard">Добавить в корзину</button>
+                                    </div>
+                                </div>
+                            </form>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- Close Content -->
+    <!-- Start Slider Script -->
+    <script src="assets/js/slick.min.js"></script>
+    <script>
+        $('#carousel-related-product').slick({
+            infinite: true,
+            arrows: false,
+            slidesToShow: 4,
+            slidesToScroll: 3,
+            dots: true,
+            responsive: [{
+                    breakpoint: 1024,
+                    settings: {
+                        slidesToShow: 3,
+                        slidesToScroll: 3
+                    }
+                },
+                {
+                    breakpoint: 600,
+                    settings: {
+                        slidesToShow: 2,
+                        slidesToScroll: 3
+                    }
+                },
+                {
+                    breakpoint: 480,
+                    settings: {
+                        slidesToShow: 2,
+                        slidesToScroll: 3
+                    }
+                }
+            ]
+        });
+    </script>
+    <!-- End Slider Script -->
+    3D модель вкусняшки
+	<br>
+    <canvas id="canvasGL"  style='background-color: black; -webkit-box-shadow: 1px 1px 1px 1px #ffffff;
+    box-shadow: 1px 1px 1px 1px #0D0808; '></canvas>
+
+    <!-- Start Footer -->
+    <footer class="bg-dark" id="tempaltemo_footer">
+        <div class="container">
+            <div class="row">
+
+                
+
+                <div class="col-md-4 pt-5">
+                    <h2 class="h2 text-light border-bottom pb-3 border-light">Важные сылки</h2>
+                    <ul class="list-unstyled text-light footer-link-list">
+                        <li><a class="text-decoration-none" href="index.html">Главная</a></li>
+                        <li><a class="text-decoration-none" href="about.html">О нас</a></li>
+                        <li><a class="text-decoration-none" href="shop.html">Магазин</a></li>
+
+                        <li><a class="text-decoration-none" href="contact.html">Контакты</a></li>
+                    </ul>
+                </div>
+
+            </div>
+
+            <div class="row text-light mb-4">
+                <div class="col-12 mb-3">
+                    <div class="w-100 my-3 border-top border-light"></div>
+                </div>
+
+
+
+
+    </footer>
+    <!-- End Footer -->
+
+    <!-- Start Script -->
+    <script src="assets/js/jquery-1.11.0.min.js"></script>
+    <script src="assets/js/jquery-migrate-1.2.1.min.js"></script>
+    <script src="assets/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/templatemo.js"></script>
+    <script src="assets/js/custom.js"></script>
+
+    <!-- End Script -->
+
+
+
+
+
+
+</body>
+
+</html>

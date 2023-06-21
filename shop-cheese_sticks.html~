@@ -95,7 +95,7 @@
         gl.uniform1i(u_samplerNormalMap, 1);
         gl.uniform1i(u_samplerSpecularMap, 2);
 
-       loadJSON(gl, 'resource/vclifbj_LOD0.json');
+       loadJSON(gl, 'resource/palka.json');
        //loadFile(gl, 'resource/kedi.obj');
 
 
@@ -103,9 +103,9 @@
         // ------------------------ LOAD BUFFER MODEL -----------------------------------------//
         let ModelMain = loadBuffer(gl, gl.model.meshes[0]);
         //--------------------------- create TEXTURE ------------------------------------------//
-        let tex = get_texture(gl, "resource/tex2/1.jpg");
-        let tex_normal = get_texture(gl, "resource/tex2/1_Normal_LOD0.jpg");
-        let tex_spec = get_texture(gl, "resource/tex2/1_2K_Roughness.jpg");
+        let tex = get_texture(gl, "resource/tex2/31.jpg");
+        let tex_normal = get_texture(gl, "resource/tex2/32.jpg");
+        let tex_spec = get_texture(gl, "resource/tex2/33.jpg");
         // ----------------------------- Create MATRIX -----------------------------------------//
         let PROJMATRIX = glMatrix.mat4.create();
         glMatrix.mat4.identity(PROJMATRIX);
@@ -483,6 +483,7 @@
     </script>
     <!-- End Slider Script -->
     3D модель вкусняшки
+	<br>
     <canvas id="canvasGL"  style='background-color: black; -webkit-box-shadow: 1px 1px 1px 1px #ffffff;
     box-shadow: 1px 1px 1px 1px #0D0808; '></canvas>
 
@@ -491,23 +492,7 @@
         <div class="container">
             <div class="row">
 
-                <div class="col-md-4 pt-5">
-                    <h2 class="h2 text-success border-bottom pb-3 border-light logo">Агу шоп</h2>
-                    <ul class="list-unstyled text-light footer-link-list">
-                        <li>
-                            <i class="fas fa-map-marker-alt fa-fw"></i>
-                            Размещено на github pages
-                        </li>
-                        <li>
-                            <i class="fa fa-phone fa-fw"></i>
-                            <a class="text-decoration-none" href="tel:010-020-0340">код в репозитории гитхаб</a>
-                        </li>
-                        <li>
-                            <i class="fa fa-envelope fa-fw"></i>
-                            <a class="text-decoration-none" href="mailto:info@company.com">сам гитхаб</a>
-                        </li>
-                    </ul>
-                </div>
+               
 
 
                 <div class="col-md-4 pt-5">

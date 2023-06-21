@@ -3,6 +3,11 @@
 
 <head>
     <title>АГУ - контакты</title>
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+<link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+
+
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -62,27 +67,7 @@ https://templatemo.com/tm-559-zay-shop
                         </li>
                     </ul>
                 </div>
-                <div class="navbar align-self-center d-flex">
-                    <div class="d-lg-none flex-sm-fill mt-3 mb-4 col-7 col-sm-auto pr-3">
-                        <div class="input-group">
-                            <input type="text" class="form-control" id="inputMobileSearch" placeholder="Search ...">
-                            <div class="input-group-text">
-                                <i class="fa fa-fw fa-search"></i>
-                            </div>
-                        </div>
-                    </div>
-                    <a class="nav-icon d-none d-lg-inline" href="#" data-bs-toggle="modal" data-bs-target="#templatemo_search">
-                        <i class="fa fa-fw fa-search text-dark mr-2"></i>
-                    </a>
-                    <a class="nav-icon position-relative text-decoration-none" href="#">
-                        <i class="fa fa-fw fa-cart-arrow-down text-dark mr-1"></i>
-                        <span class="position-absolute top-0 left-100 translate-middle badge rounded-pill bg-light text-dark">7</span>
-                    </a>
-                    <a class="nav-icon position-relative text-decoration-none" href="#">
-                        <i class="fa fa-fw fa-user text-dark mr-3"></i>
-                        <span class="position-absolute top-0 left-100 translate-middle badge rounded-pill bg-light text-dark">+99</span>
-                    </a>
-                </div>
+            
             </div>
 
         </div>
@@ -112,19 +97,89 @@ https://templatemo.com/tm-559-zay-shop
         <div class="col-md-6 m-auto text-center">
             <h1 class="h1">Где мы?</h1>
             <p>
+
+                Интересный факт, чтобы заставить заработать эту карту-которая работает WebGL!
+                Хотя это и <a href="https://github.com/mapbox/mapbox-gl-js">библиотека</a>, но все же пришлось помучаться!
+                <br>
                 Мы находимся там где учимся, а именно:
+
             </p>
         </div>
     </div>
 
     <!-- Start Map -->
 
-<iframe width="100%" height="700" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" 
+<iframe width="100%" height="500" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" 
 src="https://www.openstreetmap.org/export/embed.html?bbox=83.76956641674043%2C53.34201682747941%2C83.77310693264009%2C53.34342921954874&amp;layer=mapnik" 
 style="border: 1px solid black"></iframe><br/><small><a href="https://www.openstreetmap.org/#map=19/53.34272/83.77134&amp;layers=N"></a></small>    <!-- Ena Map -->
 
-    <!-- Start Contact -->
-   
+<style>
+
+#map { position: absolute; top: 300px; bottom: 0; width: 100%; }
+</style>
+<div id="map"></div>
+<script>
+	mapboxgl.accessToken = 'pk.eyJ1IjoicGFuY2h1ayIsImEiOiJjbGo1Zmhla2kwOWhrM2ptajR1b254b2F4In0._goxLOljFcFofYTBxurfYQ';
+const map = new mapboxgl.Map({
+container: 'map',
+// Choose from Mapbox's core styles, or make your own style with Mapbox Studio
+style: 'mapbox://styles/mapbox/streets-v12',
+center: [83, 53],
+zoom: 3
+});
+ 
+map.on('load', () => {
+// Add an image to use as a custom marker
+map.loadImage(
+'https://docs.mapbox.com/mapbox-gl-js/assets/custom_marker.png',
+(error, image) => {
+if (error) throw error;
+map.addImage('custom-marker', image);
+// Add a GeoJSON source with 2 points
+map.addSource('points', {
+'type': 'geojson',
+'data': {
+'type': 'FeatureCollection',
+'features': [
+
+{
+// feature for Mapbox SF
+'type': 'Feature',
+'geometry': {
+'type': 'Point',
+'coordinates': [83.76956641674043, 53.34201682747941]
+},
+'properties': {
+'title': 'АлтГУ'
+}
+}
+]
+}
+});
+ 
+// Add a symbol layer
+map.addLayer({
+'id': 'points',
+'type': 'symbol',
+'source': 'points',
+'layout': {
+'icon-image': 'custom-marker',
+// get the title name from the source's "title" property
+'text-field': ['get', 'title'],
+'text-font': [
+'Open Sans Semibold',
+'Arial Unicode MS Bold'
+],
+'text-offset': [0, 1.25],
+'text-anchor': 'top'
+}
+});
+}
+);
+});
+</script>
+
+
     <!-- End Contact -->
 
     <!-- Start Footer -->
@@ -132,23 +187,6 @@ style="border: 1px solid black"></iframe><br/><small><a href="https://www.openst
         <div class="container">
             <div class="row">
 
-                <div class="col-md-4 pt-5">
-                    <h2 class="h2 text-success border-bottom pb-3 border-light logo">Агу шоп</h2>
-                    <ul class="list-unstyled text-light footer-link-list">
-                        <li>
-                            <i class="fas fa-map-marker-alt fa-fw"></i>
-                            Размещено на github pages
-                        </li>
-                        <li>
-                            <i class="fa fa-phone fa-fw"></i>
-                            <a class="text-decoration-none" href="tel:010-020-0340">код в репозитории гитхаб</a>
-                        </li>
-                        <li>
-                            <i class="fa fa-envelope fa-fw"></i>
-                            <a class="text-decoration-none" href="mailto:info@company.com">сам гитхаб</a>
-                        </li>
-                    </ul>
-                </div>
 
 
                 <div class="col-md-4 pt-5">

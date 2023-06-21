@@ -35,15 +35,15 @@ function myGUI(gl) {
 
     gui.add(settingGUI,'shininess').min(1.0).max(50.0).step(1.0);
 
-    const model = gui.addFolder('model');
-    model.add(settingGUI,'model_X').min(-5.0).max(15.0).step(0.1);
-    model.add(settingGUI,'model_Y').min(-5.0).max(15.0).step(0.1);
-    model.add(settingGUI,'model_Z').min(-5.0).max(15.0).step(0.1);
+    const model = gui.addFolder('координаты модели');
+    model.add(settingGUI,'model_X').min(-15.0).max(15.0).step(0.1);
+    model.add(settingGUI,'model_Y').min(-15.0).max(15.0).step(0.1);
+    model.add(settingGUI,'model_Z').min(-15.0).max(15.0).step(0.1);
 
     model.open();
 
 
-    const view = gui.addFolder('view');
+    const view = gui.addFolder('камера и ее координаты');
     view.add(settingGUI,'view_directionX').min(-15.0).max(15.0).step(0.1);
     view.add(settingGUI,'view_directionY').min(-15.0).max(15.0).step(0.1);
     view.add(settingGUI,'view_directionZ').min(-15.0).max(15.0).step(0.1);

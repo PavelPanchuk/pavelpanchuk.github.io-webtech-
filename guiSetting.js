@@ -5,7 +5,7 @@ function myGUI(gl) {
 
         rotateX: 0.0,
         model_X:  0.0,
-        model_Y:  1.0,
+        model_Y:  -3.0,
         model_Z:  -6.0,
 
         source_directionX: 0.0,

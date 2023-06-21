@@ -8,9 +8,9 @@ function myGUI(gl) {
         model_Y:  -3.0,
         model_Z:  -6.0,
 
-        source_directionX: 0.0,
-        source_directionY: 5.0,
-        source_directionZ: -5.0,
+        source_directionX: -8.0,
+        source_directionY: 11.0,
+        source_directionZ: 6.0,
 
         view_directionX: 0.0,
         view_directionY: 2.0,

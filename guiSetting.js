@@ -18,7 +18,7 @@ function myGUI(gl) {
 
         shininess: 10.0,
         normal: false,
-        axis: true,
+        axis: false,
         diffuse: true,
         normalPower: 1.0,
     }

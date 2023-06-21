@@ -10,7 +10,7 @@ function myGUI(gl) {
 
         source_directionX: 0.0,
         source_directionY: 5.0,
-        source_directionZ: 5.0,
+        source_directionZ: -5.0,
 
         view_directionX: 0.0,
         view_directionY: 2.0,
@@ -18,8 +18,8 @@ function myGUI(gl) {
 
         shininess: 10.0,
         normal: false,
-        axis: false,
-        diffuse: false,
+        axis: true,
+        diffuse: true,
         normalPower: 1.0,
     }
 

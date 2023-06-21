@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-    <title>АГУ- Главная</title>
+    <title>АГУ- О НАС</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -83,10 +83,35 @@ https://templatemo.com/tm-559-zay-shop
     </div>
 
 
-Тут что то должно было быть, но тут ничего нет, перейдите на другие страницы вверху вкладки:\
+
+    <section class="bg-success py-5">
+        <div class="container">
+            <div class="row align-items-center py-5">
+                <div class="col-md-8 text-white">
+                    <h1>Разработчики</h1>
+                    <p> 
+                        Элеонора Плотицына
+                         <br>
+                        Валентина Русских
+                        <br>
+                        Павел Панчук
+                        <br>
+                        https://github.com/PavelPanchuk/webtech -репозиторий
+                        <br>
+                        Элементы с использованием WebGL:
+                        <br>
+                        В контактах используется 3D карта с использованием готовой open-source библиотекой от mapbox
+                        <br>
+                        В товарах каталога в низу можно посмотреть 3D модель продаваемого объекта, управление мышью, или в правом верхнем углу панель
+                    </p>
+                </div>
+                <div class="col-md-4">
+                    <img src="assets/img/about-hero.svg" alt="About Hero">
+                </div>
+            </div>
+        </div>
+    </section>
     <!-- Close Banner -->
-    <br>
-    <img src="images.jpeg" width="1980" height="1080"  alt="">
 
 
 
@@ -95,12 +120,29 @@ https://templatemo.com/tm-559-zay-shop
         <div class="container">
             <div class="row">
 
+                <div class="col-md-4 pt-5">
+                    <h2 class="h2 text-success border-bottom pb-3 border-light logo">Агу шоп</h2>
+                    <ul class="list-unstyled text-light footer-link-list">
+                        <li>
+                            <i class="fas fa-map-marker-alt fa-fw"></i>
+                            Размещено на github pages
+                        </li>
+                        <li>
+                            <i class="fa fa-phone fa-fw"></i>
+                            <a class="text-decoration-none" href="tel:010-020-0340">код в репозитории гитхаб</a>
+                        </li>
+                        <li>
+                            <i class="fa fa-envelope fa-fw"></i>
+                            <a class="text-decoration-none" href="mailto:info@company.com">сам гитхаб</a>
+                        </li>
+                    </ul>
+                </div>
 
 
                 <div class="col-md-4 pt-5">
                     <h2 class="h2 text-light border-bottom pb-3 border-light">Важные сылки</h2>
                     <ul class="list-unstyled text-light footer-link-list">
-                        <li><a class="text-decoration-none" href="index.html">Главная</a></li>
+                       <li><a class="text-decoration-none" href="index.html">Главная</a></li>
                         <li><a class="text-decoration-none" href="about.html">О нас</a></li>
                         <li><a class="text-decoration-none" href="shop.html">Магазин</a></li>
 

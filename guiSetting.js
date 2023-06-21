@@ -36,9 +36,9 @@ function myGUI(gl) {
     gui.add(settingGUI,'shininess').min(1.0).max(50.0).step(1.0);
 
     const model = gui.addFolder('model');
-    model.add(settingGUI,'model_X').min(-5.0).max(5.0).step(0.1);
-    model.add(settingGUI,'model_Y').min(-5.0).max(5.0).step(0.1);
-    model.add(settingGUI,'model_Z').min(-5.0).max(5.0).step(0.1);
+    model.add(settingGUI,'model_X').min(-5.0).max(15.0).step(0.1);
+    model.add(settingGUI,'model_Y').min(-5.0).max(15.0).step(0.1);
+    model.add(settingGUI,'model_Z').min(-5.0).max(15.0).step(0.1);
 
     model.open();
 
